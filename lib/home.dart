@@ -12,7 +12,8 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 final BLEController bleController = BLEController();
 ValueNotifier<BLEConnectionStatus> connectionStatus = ValueNotifier<BLEConnectionStatus>(BLEConnectionStatus.unknown);
-
+ValueNotifier<double> desiredLightLevel = ValueNotifier<double>(125.0);
+const double buttonWidth = 270;
 
 
 class HomePage extends StatefulWidget {
@@ -62,23 +63,70 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
   */
 
+  BoxDecoration buttonDecoration() {
+    return BoxDecoration(
+          color: Colors.deepOrange[900],
+          borderRadius: const BorderRadius.all(Radius.circular(15)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.deepPurple.withOpacity(0.5),
+              spreadRadius: 2,
+              blurRadius: 5,
+              offset: const Offset(5, 5), // changes position of shadow
+            ),
+          ],
+        );
+  }
+
 
   Widget commandButton(void Function() command, IconData icon) {
     return InkWell(
       onTap: command,
       
       child: Container(
-        color: Colors.deepOrange[900],
-        height: 50,
-        width: 150,
+        decoration: buttonDecoration(),
+        height: 100,
+        width: buttonWidth,
         child: Center(
           child: Icon(
             icon,
-            color: Colors.blueGrey,
+            color: Colors.deepPurple,
           ),
         )
       ),
     );
+  }
+
+
+  Widget lightManualSlider(ValueNotifier<double> desiredLightValue, void Function(int) func) {
+    return ValueListenableBuilder(
+      valueListenable: desiredLightValue,
+      builder: (BuildContext context, double value, Widget? child) {
+        return Container(
+          decoration: buttonDecoration(),
+          height: 100,
+          width: buttonWidth,
+          child: Center(
+            child: Slider(
+              activeColor: Colors.deepPurple,
+              thumbColor: Colors.deepPurple,
+              value: desiredLightValue.value,
+              max: 255.0,
+              divisions: 255,
+              label: desiredLightValue.value.round().toString(),
+              onChanged: (double value) {
+                desiredLightValue.value = value;
+              },
+              onChangeEnd: (double value) {
+                desiredLightValue.value = value;
+                func(value.round());
+              },
+            )
+          )
+        );
+      },
+    );
+    
   }
 
 
@@ -93,7 +141,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      commandButton(bleController.toggleLed, Icons.lightbulb),
+                      commandButton(bleController.powerOnLed, Icons.lightbulb),
+                      const SizedBox(height: 20),
+                      commandButton(bleController.powerOffLed, Icons.lightbulb_outline),
+                      const SizedBox(height: 20),
+                      lightManualSlider(desiredLightLevel, bleController.manualLedValue),
                       const SizedBox(height: 20),
                       commandButton(bleController.disconnectDevice, Icons.bluetooth_disabled),
                     ],
@@ -118,9 +170,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                           });
                         },
                         child: Container(
-                          color: Colors.deepOrange[900],
-                          height: 40,
-                          width: 225,
+                          decoration: buttonDecoration(),
+                          height: 50,
+                          width: buttonWidth,
                           child: const Center(
                             child: Text(
                               "Connection failed, tap to retry",

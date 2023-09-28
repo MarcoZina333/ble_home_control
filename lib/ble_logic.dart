@@ -37,7 +37,8 @@ class BLEController {
   
   // UUIDs of your device
   final Uuid _serviceUuid = Uuid.parse("d8c38db4-e40f-48e6-aac4-57e40b14d3c1");
-  final Uuid _characteristicUuid = Uuid.parse("4e56b8c1-096c-4a58-97b8-0e262462b219");
+  final Uuid _characteristicUuidTx = Uuid.parse("4e56b8c1-096c-4a58-97b8-0e262462b219");
+  //final Uuid _characteristicUuidRx = Uuid.parse("2f6c1ff8-258c-4454-9269-25f1d9cb1309");
 
   // Metti il nome assegnato all'ESP
   static const String deviceName = "HomeControl0.1";
@@ -90,7 +91,7 @@ class BLEController {
             {
               _rxCharacteristic = QualifiedCharacteristic(
               serviceId: _serviceUuid,
-              characteristicId: _characteristicUuid,
+              characteristicId: _characteristicUuidTx,
               deviceId: event.deviceId);
               _status = BLEConnectionStatus.connected;
               break;
@@ -138,6 +139,10 @@ class BLEController {
     //per mandare stringhe serve codificarle come lista interi (ASCII)
     //verificare se usare write con o senza risposta
     if (_status == BLEConnectionStatus.connected) {
+      /*
+      parte messa un po' a caso che servirebbe per ricevere dati dal server
+      final characteristic = QualifiedCharacteristic(serviceId: _serviceUuid, characteristicId: _characteristicUuidRx, deviceId: _myDevice.id);
+      final response = await _flutterReactiveBle.readCharacteristic(characteristic);*/
       _flutterReactiveBle
           .writeCharacteristicWithoutResponse(_rxCharacteristic, value: 
         ascii.encode(command),
@@ -149,18 +154,22 @@ class BLEController {
     sendCommand("EXIT");
   }
 
-  void toggleLed() {
-    sendCommand("LT");
+  void manualLedValue(int value) {
+    sendCommand("L?$value");
   }
 
 
   void powerOnLed() {
-    sendCommand("L1");
+    sendCommand("L_DUCCIO");
   }
 
 
+  void chillLedMode() {
+    sendCommand("L_CHILL");
+  }
+
   void powerOffLed() {
-    sendCommand("L0");
+    sendCommand("L_OFF");
   }
 
 
